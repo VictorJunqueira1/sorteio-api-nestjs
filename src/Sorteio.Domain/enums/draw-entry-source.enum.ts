@@ -3,4 +3,5 @@ export enum DrawEntrySource {
     Registered = 'Registered',
     Import = 'Import',
     QrCode = 'QrCode',
+    Numeric = 'Numeric',
 }

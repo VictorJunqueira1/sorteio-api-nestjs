@@ -25,6 +25,11 @@ export interface CreateRegisteredDrawEntryProps {
     imageUrl?: string | null;
 }
 
+export interface CreateNumericDrawEntryProps {
+    drawSessionId: string;
+    displayName: string;
+}
+
 export class DrawEntry {
     private constructor(private readonly props: DrawEntryProps) { }
 
@@ -54,12 +59,25 @@ export class DrawEntry {
         });
     }
 
-    static restore(props: DrawEntryProps): DrawEntry {
-        return new DrawEntry(props);
+    static createNumeric(props: CreateNumericDrawEntryProps): DrawEntry {
+        return new DrawEntry({
+            id: randomUUID(),
+            drawSessionId: props.drawSessionId,
+            participantId: null,
+            displayName: DrawEntry.normalizeRequiredText(props.displayName),
+            imageUrl: null,
+            source: DrawEntrySource.Numeric,
+            isWinner: false,
+            createdAt: new Date(),
+        });
     }
 
     markAsWinner(): void {
         this.props.isWinner = true;
+    }
+
+    static restore(props: DrawEntryProps): DrawEntry {
+        return new DrawEntry(props);
     }
 
     get id(): string {

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body } from '@nestjs/common';
 import {
     ApiBadRequestResponse,
     ApiCreatedResponse,
@@ -8,10 +8,11 @@ import {
     ApiParam,
     ApiTags,
 } from '@nestjs/swagger';
-
 import { ExecuteSimpleDrawUseCase } from '../../Sorteio.Application/use-cases/draw-results/execute-simple-draw.use-case';
 import { ListDrawResultsBySessionUseCase } from '../../Sorteio.Application/use-cases/draw-results/list-draw-results-by-session.use-case';
 import { DrawResultResponse } from '../../Sorteio.Communication/responses/draw-results/draw-result.response';
+import { ExecuteNumberDrawUseCase } from 'src/Sorteio.Application/use-cases/draw-results/execute-number-draw.use-case';
+import { ExecuteNumberDrawRequest } from 'src/Sorteio.Communication/requests/draw-results/execute-number-draw.request';
 
 @ApiTags('Resultados do Sorteio')
 @Controller('draw-sessions/:drawSessionId')
@@ -19,7 +20,8 @@ export class DrawResultsController {
     constructor(
         private readonly executeSimpleDrawUseCase: ExecuteSimpleDrawUseCase,
         private readonly listDrawResultsBySessionUseCase: ListDrawResultsBySessionUseCase,
-    ) {}
+        private readonly executeNumberDrawUseCase: ExecuteNumberDrawUseCase
+    ) { }
 
     @Post('draw/simple')
     @ApiOperation({
@@ -47,6 +49,35 @@ export class DrawResultsController {
         @Param('drawSessionId') drawSessionId: string,
     ): Promise<DrawResultResponse> {
         return await this.executeSimpleDrawUseCase.execute(drawSessionId);
+    }
+
+    @Post('draw/number')
+    @ApiOperation({
+        summary: 'Executar sorteio numérico',
+        description:
+            'Sorteia um número dentro do intervalo informado. Quando a sessão não permite repetição, números já sorteados ficam indisponíveis.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiCreatedResponse({
+        description: 'Sorteio numérico executado com sucesso.',
+        type: DrawResultResponse,
+    })
+    @ApiBadRequestResponse({
+        description:
+            'Intervalo inválido, sessão finalizada ou sem números disponíveis para sorteio.',
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão de sorteio não encontrada.',
+    })
+    async executeNumberDraw(
+        @Param('drawSessionId') drawSessionId: string,
+        @Body() request: ExecuteNumberDrawRequest,
+    ): Promise<DrawResultResponse> {
+        return await this.executeNumberDrawUseCase.execute(drawSessionId, request);
     }
 
     @Get('results')

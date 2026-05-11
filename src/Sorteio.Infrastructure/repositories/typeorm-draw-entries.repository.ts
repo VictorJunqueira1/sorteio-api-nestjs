@@ -100,6 +100,16 @@ export class TypeOrmDrawEntriesRepository implements DrawEntriesRepository {
         await this.repository.softDelete(id);
     }
 
+    async resetWinnersBySessionId(drawSessionId: string): Promise<void> {
+        await this.repository
+            .createQueryBuilder()
+            .update(DrawEntryModel)
+            .set({ isWinner: false })
+            .where('draw_session_id = :drawSessionId', { drawSessionId })
+            .andWhere('deleted_at IS NULL')
+            .execute();
+    }
+
     private toModel(drawEntry: DrawEntry): Partial<DrawEntryModel> {
         return {
             id: drawEntry.id,

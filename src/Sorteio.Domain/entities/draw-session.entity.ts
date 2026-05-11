@@ -53,6 +53,16 @@ export class DrawSession {
         this.props.updatedAt = new Date();
     }
 
+    restart(): void {
+        if (this.props.status === DrawSessionStatus.Canceled) {
+            throw new BusinessException('Não é possível reiniciar uma sessão cancelada.');
+        }
+
+        this.props.status = DrawSessionStatus.Open;
+        this.props.finishedAt = null;
+        this.props.updatedAt = new Date();
+    }
+
     get id(): string {
         return this.props.id;
     }

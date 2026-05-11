@@ -31,6 +31,10 @@ export class TypeOrmDrawResultsRepository implements DrawResultsRepository {
         return drawResults.map((drawResult) => this.toDomain(drawResult));
     }
 
+    async deleteBySessionId(drawSessionId: string): Promise<void> {
+        await this.repository.delete({ drawSessionId });
+    }
+
     private toModel(drawResult: DrawResult): Partial<DrawResultModel> {
         return {
             id: drawResult.id,

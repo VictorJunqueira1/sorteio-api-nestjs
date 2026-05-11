@@ -29,6 +29,7 @@ import { ExecuteNumberDrawUseCase } from 'src/Sorteio.Application/use-cases/draw
 import { ImportManualDrawEntriesUseCase } from 'src/Sorteio.Application/use-cases/draw-entries/import-manual-draw-entries.use-case';
 import { DrawEntriesImportParserService } from '../../Sorteio.Application/services/draw-entries/draw-entries-import-parser.service';
 import { PreviewImportDrawEntriesUseCase } from '../../Sorteio.Application/use-cases/draw-entries/preview-import-draw-entries.use-case';
+import { RestartDrawSessionUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/restart-draw-session.use-case';
 
 @Module({
     imports: [
@@ -48,6 +49,7 @@ import { PreviewImportDrawEntriesUseCase } from '../../Sorteio.Application/use-c
         ImportManualDrawEntriesUseCase,
         ListDrawEntriesBySessionUseCase,
         DeleteDrawEntryUseCase,
+        RestartDrawSessionUseCase,
 
         ExecuteSimpleDrawUseCase,
         ExecuteNumberDrawUseCase,

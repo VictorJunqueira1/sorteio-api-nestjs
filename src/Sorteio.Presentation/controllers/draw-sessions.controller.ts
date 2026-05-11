@@ -26,7 +26,7 @@ import { DeleteDrawSessionUseCase } from '../../Sorteio.Application/use-cases/dr
 import { FinishDrawSessionUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/finish-draw-session.use-case';
 import { GetDrawSessionByIdUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/get-draw-session-by-id.use-case';
 import { ListDrawSessionsUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/list-draw-sessions.use-case';
-
+import { RestartDrawSessionUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/restart-draw-session.use-case';
 import { CreateDrawSessionRequest } from '../../Sorteio.Communication/requests/draw-sessions/create-draw-session.request';
 import { ListDrawSessionsRequest } from '../../Sorteio.Communication/requests/draw-sessions/list-draw-sessions.request';
 import { DrawSessionResponse } from '../../Sorteio.Communication/responses/draw-sessions/draw-session.response';
@@ -40,7 +40,8 @@ export class DrawSessionsController {
         private readonly getDrawSessionByIdUseCase: GetDrawSessionByIdUseCase,
         private readonly deleteDrawSessionUseCase: DeleteDrawSessionUseCase,
         private readonly finishDrawSessionUseCase: FinishDrawSessionUseCase,
-    ) {}
+        private readonly restartDrawSessionUseCase: RestartDrawSessionUseCase
+    ) { }
 
     @Post()
     @ApiOperation({
@@ -122,6 +123,31 @@ export class DrawSessionsController {
     })
     async finish(@Param('id') id: string): Promise<DrawSessionResponse> {
         return await this.finishDrawSessionUseCase.execute(id);
+    }
+
+    @Patch(':id/restart')
+    @ApiOperation({
+        summary: 'Reiniciar sessão de sorteio',
+        description:
+            'Reinicia uma sessão de sorteio, limpando o histórico de resultados, removendo a marcação de vencedores das entradas e reabrindo a sessão.',
+    })
+    @ApiParam({
+        name: 'id',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiOkResponse({
+        description: 'Sessão reiniciada com sucesso.',
+        type: DrawSessionResponse,
+    })
+    @ApiBadRequestResponse({
+        description: 'Sessão cancelada ou regra de negócio inválida.',
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão de sorteio não encontrada.',
+    })
+    async restart(@Param('id') id: string): Promise<DrawSessionResponse> {
+        return await this.restartDrawSessionUseCase.execute(id);
     }
 
     @Delete(':id')

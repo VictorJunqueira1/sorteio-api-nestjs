@@ -15,5 +15,6 @@ export interface DrawEntriesRepository {
     findById(id: string): Promise<DrawEntry | null>;
     findBySessionId(drawSessionId: string): Promise<DrawEntry[]>;
     existsInSession(input: CheckDuplicateDrawEntryInput): Promise<boolean>;
+    resetWinnersBySessionId(drawSessionId: string): Promise<void>;
     delete(id: string): Promise<void>;
 }

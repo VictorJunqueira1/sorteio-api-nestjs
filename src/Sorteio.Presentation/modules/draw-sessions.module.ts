@@ -18,14 +18,11 @@ import { DRAW_SESSIONS_REPOSITORY } from 'src/Sorteio.Domain/repositories/draw-s
 import { TypeOrmDrawEntriesRepository } from 'src/Sorteio.Infrastructure/repositories/typeorm-draw-entries.repository';
 import { TypeOrmDrawSessionsRepository } from 'src/Sorteio.Infrastructure/repositories/typeorm-draw-sessions.repository';
 import { FinishDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/draw-sessions/finish-draw-session.use-case';
-
+import { CreateBulkManualDrawEntriesUseCase } from '../../Sorteio.Application/use-cases/draw-entries/create-bulk-manual-draw-entries.use-case';
 import { DrawResultsController } from '../controllers/draw-results.controller';
-
 import { ExecuteSimpleDrawUseCase } from '../../Sorteio.Application/use-cases/draw-results/execute-simple-draw.use-case';
 import { ListDrawResultsBySessionUseCase } from '../../Sorteio.Application/use-cases/draw-results/list-draw-results-by-session.use-case';
-
 import { DRAW_RESULTS_REPOSITORY } from '../../Sorteio.Domain/repositories/draw-results/draw-results.repository';
-
 import { DrawResultModel } from '../../Sorteio.Infrastructure/database/models/draw-result.model';
 import { TypeOrmDrawResultsRepository } from '../../Sorteio.Infrastructure/repositories/typeorm-draw-results.repository';
 
@@ -43,6 +40,7 @@ import { TypeOrmDrawResultsRepository } from '../../Sorteio.Infrastructure/repos
 
         CreateManualDrawEntryUseCase,
         CreateRegisteredDrawEntryUseCase,
+        CreateBulkManualDrawEntriesUseCase,
         ListDrawEntriesBySessionUseCase,
         DeleteDrawEntryUseCase,
 

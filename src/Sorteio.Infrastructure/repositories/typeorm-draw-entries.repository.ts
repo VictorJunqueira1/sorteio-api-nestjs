@@ -23,6 +23,20 @@ export class TypeOrmDrawEntriesRepository implements DrawEntriesRepository {
         return this.toDomain(savedDrawEntry);
     }
 
+    async createMany(drawEntries: DrawEntry[]): Promise<DrawEntry[]> {
+        if (drawEntries.length === 0) {
+            return [];
+        }
+
+        const models = drawEntries.map((drawEntry) =>
+            this.repository.create(this.toModel(drawEntry)),
+        );
+
+        const savedDrawEntries = await this.repository.save(models);
+
+        return savedDrawEntries.map((drawEntry) => this.toDomain(drawEntry));
+    }
+
     async findById(id: string): Promise<DrawEntry | null> {
         const drawEntry = await this.repository.findOne({
             where: { id },

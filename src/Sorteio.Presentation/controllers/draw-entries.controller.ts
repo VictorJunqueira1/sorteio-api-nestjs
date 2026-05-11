@@ -26,6 +26,9 @@ import { CreateRegisteredDrawEntryRequest } from '../../Sorteio.Communication/re
 import { DrawEntryResponse } from '../../Sorteio.Communication/responses/draw-entries/draw-entry.response';
 import { DeleteDrawEntryUseCase } from 'src/Sorteio.Application/use-cases/draw-entries/delete-draw-entry.use-case';
 import { ListDrawEntriesBySessionUseCase } from 'src/Sorteio.Application/use-cases/draw-entries/list-draw-entries-by-session.use-case';
+import { CreateBulkManualDrawEntriesUseCase } from '../../Sorteio.Application/use-cases/draw-entries/create-bulk-manual-draw-entries.use-case';
+import { CreateBulkManualDrawEntriesRequest } from '../../Sorteio.Communication/requests/draw-entries/create-bulk-manual-draw-entries.request';
+import { BulkDrawEntriesResponse } from '../../Sorteio.Communication/responses/draw-entries/bulk-draw-entries.response';
 
 @ApiTags('Entradas da Sessão')
 @Controller('draw-sessions/:drawSessionId/entries')
@@ -33,6 +36,7 @@ export class DrawEntriesController {
     constructor(
         private readonly createManualDrawEntryUseCase: CreateManualDrawEntryUseCase,
         private readonly createRegisteredDrawEntryUseCase: CreateRegisteredDrawEntryUseCase,
+        private readonly createBulkManualDrawEntriesUseCase: CreateBulkManualDrawEntriesUseCase,
         private readonly listDrawEntriesBySessionUseCase: ListDrawEntriesBySessionUseCase,
         private readonly deleteDrawEntryUseCase: DeleteDrawEntryUseCase,
     ) { }
@@ -63,6 +67,37 @@ export class DrawEntriesController {
         @Body() request: CreateManualDrawEntryRequest,
     ): Promise<DrawEntryResponse> {
         return await this.createManualDrawEntryUseCase.execute(
+            drawSessionId,
+            request,
+        );
+    }
+
+    @Post('bulk')
+    @ApiOperation({
+        summary: 'Adicionar entradas manuais em lote na sessão',
+        description:
+            'Adiciona vários nomes de uma vez em uma sessão de sorteio. Nomes duplicados na sessão ou repetidos na lista enviada são ignorados e retornados com o motivo.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiCreatedResponse({
+        description: 'Entradas processadas com sucesso.',
+        type: BulkDrawEntriesResponse,
+    })
+    @ApiBadRequestResponse({
+        description: 'Sessão finalizada, lista vazia ou dados inválidos.',
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão de sorteio não encontrada.',
+    })
+    async createBulkManual(
+        @Param('drawSessionId') drawSessionId: string,
+        @Body() request: CreateBulkManualDrawEntriesRequest,
+    ): Promise<BulkDrawEntriesResponse> {
+        return await this.createBulkManualDrawEntriesUseCase.execute(
             drawSessionId,
             request,
         );

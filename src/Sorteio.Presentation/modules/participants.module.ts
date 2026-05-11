@@ -30,5 +30,6 @@ import { ParticipantsController } from '../controllers/participants.controller';
             useClass: S3FileStorageService,
         },
     ],
+    exports: [PARTICIPANTS_REPOSITORY],
 })
 export class ParticipantsModule { }

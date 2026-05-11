@@ -5,33 +5,34 @@ import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './Sorteio.Presentation/filters/global-exception.filter';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
-    app.enableShutdownHooks();
-    app.useGlobalFilters(new GlobalExceptionFilter());
-    
-    app.useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true,
-            forbidNonWhitelisted: true,
-            transform: true,
-        }),
-    );
+  const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
-    const swaggerConfig = new DocumentBuilder()
-        .setTitle('UNASP Sorteio API')
-        .setDescription('API para gerenciamento de sessões, participantes, entradas e resultados de sorteios.')
-        .setVersion('1.0.0')
-        .build();
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-    const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('UNASP Sorteio API')
+    .setDescription('API para gerenciamento de sessões, participantes, entradas e resultados de sorteios.')
+    .setVersion('1.0.0')
+    .build();
 
-    SwaggerModule.setup('docs', app, document, {
-        swaggerOptions: {
-            persistAuthorization: true,
-        },
-    });
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
 
-    await app.listen(process.env.PORT ?? 3000);
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      docExpansion: 'none'
+    },
+  });
+
+  await app.listen(process.env.PORT ?? 3000);
 }
 
 bootstrap();

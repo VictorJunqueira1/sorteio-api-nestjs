@@ -7,9 +7,13 @@ import {
     HttpStatus,
     Param,
     Post,
+    UploadedFile,
+    UseInterceptors,
 } from '@nestjs/common';
 import {
     ApiBadRequestResponse,
+    ApiBody,
+    ApiConsumes,
     ApiCreatedResponse,
     ApiNoContentResponse,
     ApiNotFoundResponse,
@@ -29,6 +33,11 @@ import { ListDrawEntriesBySessionUseCase } from 'src/Sorteio.Application/use-cas
 import { CreateBulkManualDrawEntriesUseCase } from '../../Sorteio.Application/use-cases/draw-entries/create-bulk-manual-draw-entries.use-case';
 import { CreateBulkManualDrawEntriesRequest } from '../../Sorteio.Communication/requests/draw-entries/create-bulk-manual-draw-entries.request';
 import { BulkDrawEntriesResponse } from '../../Sorteio.Communication/responses/draw-entries/bulk-draw-entries.response';
+import { ImportManualDrawEntriesUseCase } from 'src/Sorteio.Application/use-cases/draw-entries/import-manual-draw-entries.use-case';
+import { ImportDrawEntriesResponse } from 'src/Sorteio.Communication/responses/draw-entries/import-draw-entries.response';
+import { ImportDrawEntriesRequest } from 'src/Sorteio.Communication/requests/draw-entries/import-draw-entries.request';
+import * as importDrawEntriesFile from 'src/Sorteio.Application/use-cases/draw-entries/types/import-draw-entries-file';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Entradas da Sessão')
 @Controller('draw-sessions/:drawSessionId/entries')
@@ -39,6 +48,7 @@ export class DrawEntriesController {
         private readonly createBulkManualDrawEntriesUseCase: CreateBulkManualDrawEntriesUseCase,
         private readonly listDrawEntriesBySessionUseCase: ListDrawEntriesBySessionUseCase,
         private readonly deleteDrawEntryUseCase: DeleteDrawEntryUseCase,
+        private readonly importManualDrawEntriesUseCase: ImportManualDrawEntriesUseCase,
     ) { }
 
     @Post('manual')
@@ -131,6 +141,62 @@ export class DrawEntriesController {
         return await this.createRegisteredDrawEntryUseCase.execute(
             drawSessionId,
             request,
+        );
+    }
+
+    @Post('import')
+    @UseInterceptors(FileInterceptor('file'))
+    @ApiOperation({
+        summary: 'Importar entradas por arquivo',
+        description:
+            'Importa nomes para uma sessão de sorteio a partir de arquivos CSV, XLSX, XLS ou TXT. A flag skipFirstRow permite ignorar a primeira linha quando ela representa cabeçalho.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            required: ['file'],
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'Arquivo CSV, XLSX, XLS ou TXT com os nomes.',
+                },
+                skipFirstRow: {
+                    type: 'boolean',
+                    example: true,
+                    default: false,
+                    description:
+                        'Quando true, desconsidera a primeira linha do arquivo.',
+                },
+            },
+        },
+    })
+    @ApiCreatedResponse({
+        description: 'Arquivo processado com sucesso.',
+        type: ImportDrawEntriesResponse,
+    })
+    @ApiBadRequestResponse({
+        description:
+            'Arquivo inválido, sessão finalizada, lista sem nomes válidos ou dados inválidos.',
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão de sorteio não encontrada.',
+    })
+    async importFile(
+        @Param('drawSessionId') drawSessionId: string,
+        @Body() request: ImportDrawEntriesRequest,
+        @UploadedFile() file?: importDrawEntriesFile.ImportDrawEntriesFile,
+    ): Promise<ImportDrawEntriesResponse> {
+        return await this.importManualDrawEntriesUseCase.execute(
+            drawSessionId,
+            request,
+            file,
         );
     }
 

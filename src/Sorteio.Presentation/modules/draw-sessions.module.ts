@@ -26,6 +26,7 @@ import { DRAW_RESULTS_REPOSITORY } from '../../Sorteio.Domain/repositories/draw-
 import { DrawResultModel } from '../../Sorteio.Infrastructure/database/models/draw-result.model';
 import { TypeOrmDrawResultsRepository } from '../../Sorteio.Infrastructure/repositories/typeorm-draw-results.repository';
 import { ExecuteNumberDrawUseCase } from 'src/Sorteio.Application/use-cases/draw-results/execute-number-draw.use-case';
+import { ImportManualDrawEntriesUseCase } from 'src/Sorteio.Application/use-cases/draw-entries/import-manual-draw-entries.use-case';
 
 @Module({
     imports: [
@@ -42,6 +43,7 @@ import { ExecuteNumberDrawUseCase } from 'src/Sorteio.Application/use-cases/draw
         CreateManualDrawEntryUseCase,
         CreateRegisteredDrawEntryUseCase,
         CreateBulkManualDrawEntriesUseCase,
+        ImportManualDrawEntriesUseCase,
         ListDrawEntriesBySessionUseCase,
         DeleteDrawEntryUseCase,
         

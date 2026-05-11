@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DrawEntryModel } from './models/draw-entry.model';
 import { DrawSessionModel } from './models/draw-session.model';
 import { ParticipantModel } from './models/participant.model';
+import { DrawResultModel } from './models/draw-result.model';
 
 @Module({
     imports: [
@@ -21,6 +22,7 @@ import { ParticipantModel } from './models/participant.model';
                     ParticipantModel,
                     DrawSessionModel,
                     DrawEntryModel,
+                    DrawResultModel,
                 ],
                 synchronize: configService.get<string>('TYPEORM_SYNC', 'false') === 'true',
                 options: {

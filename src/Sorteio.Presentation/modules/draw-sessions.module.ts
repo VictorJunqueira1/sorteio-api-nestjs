@@ -19,12 +19,22 @@ import { TypeOrmDrawEntriesRepository } from 'src/Sorteio.Infrastructure/reposit
 import { TypeOrmDrawSessionsRepository } from 'src/Sorteio.Infrastructure/repositories/typeorm-draw-sessions.repository';
 import { FinishDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/draw-sessions/finish-draw-session.use-case';
 
+import { DrawResultsController } from '../controllers/draw-results.controller';
+
+import { ExecuteSimpleDrawUseCase } from '../../Sorteio.Application/use-cases/draw-results/execute-simple-draw.use-case';
+import { ListDrawResultsBySessionUseCase } from '../../Sorteio.Application/use-cases/draw-results/list-draw-results-by-session.use-case';
+
+import { DRAW_RESULTS_REPOSITORY } from '../../Sorteio.Domain/repositories/draw-results/draw-results.repository';
+
+import { DrawResultModel } from '../../Sorteio.Infrastructure/database/models/draw-result.model';
+import { TypeOrmDrawResultsRepository } from '../../Sorteio.Infrastructure/repositories/typeorm-draw-results.repository';
+
 @Module({
     imports: [
-        TypeOrmModule.forFeature([DrawSessionModel, DrawEntryModel]),
+        TypeOrmModule.forFeature([DrawSessionModel, DrawEntryModel, DrawResultModel]),
         ParticipantsModule,
     ],
-    controllers: [DrawSessionsController, DrawEntriesController],
+    controllers: [DrawSessionsController, DrawEntriesController, DrawResultsController],
     providers: [
         CreateDrawSessionUseCase,
         ListDrawSessionsUseCase,
@@ -36,6 +46,9 @@ import { FinishDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/draw
         ListDrawEntriesBySessionUseCase,
         DeleteDrawEntryUseCase,
 
+        ExecuteSimpleDrawUseCase,
+        ListDrawResultsBySessionUseCase,
+
         FinishDrawSessionUseCase,
 
         {
@@ -45,6 +58,10 @@ import { FinishDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/draw
         {
             provide: DRAW_ENTRIES_REPOSITORY,
             useClass: TypeOrmDrawEntriesRepository,
+        },
+        {
+            provide: DRAW_RESULTS_REPOSITORY,
+            useClass: TypeOrmDrawResultsRepository,
         },
     ],
 })

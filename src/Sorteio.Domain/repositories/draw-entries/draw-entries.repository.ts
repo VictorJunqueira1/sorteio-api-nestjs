@@ -10,6 +10,7 @@ export interface CheckDuplicateDrawEntryInput {
 
 export interface DrawEntriesRepository {
     create(drawEntry: DrawEntry): Promise<DrawEntry>;
+    update(drawEntry: DrawEntry): Promise<DrawEntry>;
     findById(id: string): Promise<DrawEntry | null>;
     findBySessionId(drawSessionId: string): Promise<DrawEntry[]>;
     existsInSession(input: CheckDuplicateDrawEntryInput): Promise<boolean>;

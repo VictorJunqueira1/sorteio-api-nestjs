@@ -58,6 +58,10 @@ export class DrawEntry {
         return new DrawEntry(props);
     }
 
+    markAsWinner(): void {
+        this.props.isWinner = true;
+    }
+
     get id(): string {
         return this.props.id;
     }

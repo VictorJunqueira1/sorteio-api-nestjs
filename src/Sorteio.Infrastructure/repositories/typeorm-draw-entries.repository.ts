@@ -75,6 +75,13 @@ export class TypeOrmDrawEntriesRepository implements DrawEntriesRepository {
         return await query.getExists();
     }
 
+    async update(drawEntry: DrawEntry): Promise<DrawEntry> {
+        const model = this.repository.create(this.toModel(drawEntry));
+        const savedDrawEntry = await this.repository.save(model);
+
+        return this.toDomain(savedDrawEntry);
+    }
+
     async delete(id: string): Promise<void> {
         await this.repository.softDelete(id);
     }

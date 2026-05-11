@@ -37,6 +37,8 @@ import { ImportManualDrawEntriesUseCase } from 'src/Sorteio.Application/use-case
 import { ImportDrawEntriesResponse } from 'src/Sorteio.Communication/responses/draw-entries/import-draw-entries.response';
 import { ImportDrawEntriesRequest } from 'src/Sorteio.Communication/requests/draw-entries/import-draw-entries.request';
 import * as importDrawEntriesFile from 'src/Sorteio.Application/use-cases/draw-entries/types/import-draw-entries-file';
+import { PreviewImportDrawEntriesUseCase } from '../../Sorteio.Application/use-cases/draw-entries/preview-import-draw-entries.use-case';
+import { PreviewImportDrawEntriesResponse } from '../../Sorteio.Communication/responses/draw-entries/preview-import-draw-entries.response';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Entradas da Sessão')
@@ -47,6 +49,7 @@ export class DrawEntriesController {
         private readonly createRegisteredDrawEntryUseCase: CreateRegisteredDrawEntryUseCase,
         private readonly createBulkManualDrawEntriesUseCase: CreateBulkManualDrawEntriesUseCase,
         private readonly listDrawEntriesBySessionUseCase: ListDrawEntriesBySessionUseCase,
+        private readonly previewImportDrawEntriesUseCase: PreviewImportDrawEntriesUseCase,
         private readonly deleteDrawEntryUseCase: DeleteDrawEntryUseCase,
         private readonly importManualDrawEntriesUseCase: ImportManualDrawEntriesUseCase,
     ) { }
@@ -141,6 +144,62 @@ export class DrawEntriesController {
         return await this.createRegisteredDrawEntryUseCase.execute(
             drawSessionId,
             request,
+        );
+    }
+
+    @Post('import/preview')
+    @UseInterceptors(FileInterceptor('file'))
+    @ApiOperation({
+        summary: 'Pré-visualizar importação de entradas por arquivo',
+        description:
+            'Lê um arquivo CSV, XLSX ou TXT e retorna uma prévia dos nomes que podem ser importados, duplicados no arquivo, duplicados na sessão e linhas inválidas. Nenhum dado é salvo no banco.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            required: ['file'],
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'Arquivo CSV, XLSX ou TXT com os nomes.',
+                },
+                skipFirstRow: {
+                    type: 'boolean',
+                    example: true,
+                    default: false,
+                    description:
+                        'Quando true, desconsidera a primeira linha do arquivo.',
+                },
+            },
+        },
+    })
+    @ApiCreatedResponse({
+        description: 'Preview processado com sucesso.',
+        type: PreviewImportDrawEntriesResponse,
+    })
+    @ApiBadRequestResponse({
+        description:
+            'Arquivo inválido, sessão finalizada ou dados inválidos.',
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão de sorteio não encontrada.',
+    })
+    async previewImportFile(
+        @Param('drawSessionId') drawSessionId: string,
+        @Body() request: ImportDrawEntriesRequest,
+        @UploadedFile() file?: importDrawEntriesFile.ImportDrawEntriesFile,
+    ): Promise<PreviewImportDrawEntriesResponse> {
+        return await this.previewImportDrawEntriesUseCase.execute(
+            drawSessionId,
+            request,
+            file,
         );
     }
 

@@ -2,7 +2,7 @@ import { extname } from 'node:path';
 import { BusinessException } from '../../Sorteio.Domain/exceptions/business.exception';
 import type { ImportDrawEntriesFile } from '../use-cases/draw-entries/types/import-draw-entries-file';
 
-const ALLOWED_EXTENSIONS = ['.csv', '.xlsx', '.xls', '.txt'];
+const ALLOWED_EXTENSIONS = ['.csv', '.xlsx', '.txt'];
 const MAX_FILE_SIZE_IN_BYTES = 5 * 1024 * 1024;
 
 export class ImportDrawEntriesFileValidator {
@@ -15,7 +15,7 @@ export class ImportDrawEntriesFileValidator {
 
         if (!ALLOWED_EXTENSIONS.includes(extension)) {
             throw new BusinessException(
-                'O arquivo deve estar no formato CSV, XLSX, XLS ou TXT.',
+                'O arquivo deve estar no formato CSV, XLSX ou TXT.',
             );
         }
 

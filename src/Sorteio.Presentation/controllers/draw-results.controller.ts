@@ -1,5 +1,13 @@
 import { Controller, Get, Param, Post } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+    ApiBadRequestResponse,
+    ApiCreatedResponse,
+    ApiNotFoundResponse,
+    ApiOkResponse,
+    ApiOperation,
+    ApiParam,
+    ApiTags,
+} from '@nestjs/swagger';
 
 import { ExecuteSimpleDrawUseCase } from '../../Sorteio.Application/use-cases/draw-results/execute-simple-draw.use-case';
 import { ListDrawResultsBySessionUseCase } from '../../Sorteio.Application/use-cases/draw-results/list-draw-results-by-session.use-case';
@@ -11,10 +19,30 @@ export class DrawResultsController {
     constructor(
         private readonly executeSimpleDrawUseCase: ExecuteSimpleDrawUseCase,
         private readonly listDrawResultsBySessionUseCase: ListDrawResultsBySessionUseCase,
-    ) { }
+    ) {}
 
     @Post('draw/simple')
-    @ApiCreatedResponse({ type: DrawResultResponse })
+    @ApiOperation({
+        summary: 'Executar sorteio simples',
+        description:
+            'Sorteia uma entrada da sessão, registra o resultado no histórico e marca a entrada como vencedora quando a sessão não permite repetição.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiCreatedResponse({
+        description: 'Sorteio executado com sucesso.',
+        type: DrawResultResponse,
+    })
+    @ApiBadRequestResponse({
+        description:
+            'Sessão finalizada, sessão sem entradas ou sem entradas disponíveis para sorteio.',
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão de sorteio não encontrada.',
+    })
     async executeSimpleDraw(
         @Param('drawSessionId') drawSessionId: string,
     ): Promise<DrawResultResponse> {
@@ -22,7 +50,24 @@ export class DrawResultsController {
     }
 
     @Get('results')
-    @ApiOkResponse({ type: DrawResultResponse, isArray: true })
+    @ApiOperation({
+        summary: 'Listar resultados da sessão',
+        description:
+            'Lista o histórico de resultados sorteados em uma sessão específica.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiOkResponse({
+        description: 'Resultados retornados com sucesso.',
+        type: DrawResultResponse,
+        isArray: true,
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão de sorteio não encontrada.',
+    })
     async findResultsBySession(
         @Param('drawSessionId') drawSessionId: string,
     ): Promise<DrawResultResponse[]> {

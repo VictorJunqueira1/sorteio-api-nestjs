@@ -9,19 +9,23 @@ import {
     Post,
 } from '@nestjs/common';
 import {
+    ApiBadRequestResponse,
     ApiCreatedResponse,
     ApiNoContentResponse,
+    ApiNotFoundResponse,
     ApiOkResponse,
+    ApiOperation,
+    ApiParam,
     ApiTags,
 } from '@nestjs/swagger';
 
 import { CreateManualDrawEntryUseCase } from '../../Sorteio.Application/use-cases/draw-entries/create-manual-draw-entry.use-case';
 import { CreateRegisteredDrawEntryUseCase } from '../../Sorteio.Application/use-cases/draw-entries/create-registered-draw-entry.use-case';
-import { DeleteDrawEntryUseCase } from '../../Sorteio.Application/use-cases/draw-entries/delete-draw-entry.use-case';
-import { ListDrawEntriesBySessionUseCase } from '../../Sorteio.Application/use-cases/draw-entries/list-draw-entries-by-session.use-case';
 import { CreateManualDrawEntryRequest } from '../../Sorteio.Communication/requests/draw-entries/create-manual-draw-entry.request';
 import { CreateRegisteredDrawEntryRequest } from '../../Sorteio.Communication/requests/draw-entries/create-registered-draw-entry.request';
 import { DrawEntryResponse } from '../../Sorteio.Communication/responses/draw-entries/draw-entry.response';
+import { DeleteDrawEntryUseCase } from 'src/Sorteio.Application/use-cases/draw-entries/delete-draw-entry.use-case';
+import { ListDrawEntriesBySessionUseCase } from 'src/Sorteio.Application/use-cases/draw-entries/list-draw-entries-by-session.use-case';
 
 @ApiTags('Entradas da Sessão')
 @Controller('draw-sessions/:drawSessionId/entries')
@@ -34,7 +38,26 @@ export class DrawEntriesController {
     ) { }
 
     @Post('manual')
-    @ApiCreatedResponse({ type: DrawEntryResponse })
+    @ApiOperation({
+        summary: 'Adicionar entrada manual na sessão',
+        description:
+            'Adiciona um nome avulso diretamente em uma sessão de sorteio, sem exigir cadastro global do participante.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiCreatedResponse({
+        description: 'Entrada manual criada com sucesso.',
+        type: DrawEntryResponse,
+    })
+    @ApiBadRequestResponse({
+        description: 'Entrada duplicada ou dados inválidos.',
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão de sorteio não encontrada.',
+    })
     async createManual(
         @Param('drawSessionId') drawSessionId: string,
         @Body() request: CreateManualDrawEntryRequest,
@@ -46,7 +69,26 @@ export class DrawEntriesController {
     }
 
     @Post('registered')
-    @ApiCreatedResponse({ type: DrawEntryResponse })
+    @ApiOperation({
+        summary: 'Vincular participante cadastrado na sessão',
+        description:
+            'Cria uma entrada na sessão usando um participante previamente cadastrado.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiCreatedResponse({
+        description: 'Participante vinculado com sucesso.',
+        type: DrawEntryResponse,
+    })
+    @ApiBadRequestResponse({
+        description: 'Participante já vinculado nesta sessão ou dados inválidos.',
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão ou participante não encontrado.',
+    })
     async createRegistered(
         @Param('drawSessionId') drawSessionId: string,
         @Body() request: CreateRegisteredDrawEntryRequest,
@@ -58,7 +100,24 @@ export class DrawEntriesController {
     }
 
     @Get()
-    @ApiOkResponse({ type: DrawEntryResponse, isArray: true })
+    @ApiOperation({
+        summary: 'Listar entradas da sessão',
+        description:
+            'Lista todas as entradas de uma sessão, incluindo nomes manuais e participantes cadastrados.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiOkResponse({
+        description: 'Entradas retornadas com sucesso.',
+        type: DrawEntryResponse,
+        isArray: true,
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão de sorteio não encontrada.',
+    })
     async findBySession(
         @Param('drawSessionId') drawSessionId: string,
     ): Promise<DrawEntryResponse[]> {
@@ -67,7 +126,27 @@ export class DrawEntriesController {
 
     @Delete(':entryId')
     @HttpCode(HttpStatus.NO_CONTENT)
-    @ApiNoContentResponse()
+    @ApiOperation({
+        summary: 'Remover entrada da sessão',
+        description:
+            'Remove logicamente uma entrada específica de uma sessão de sorteio.',
+    })
+    @ApiParam({
+        name: 'drawSessionId',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiParam({
+        name: 'entryId',
+        description: 'ID da entrada da sessão.',
+        example: '8a7c4f61-1111-4321-9999-2c963f66afa6',
+    })
+    @ApiNoContentResponse({
+        description: 'Entrada removida com sucesso.',
+    })
+    @ApiNotFoundResponse({
+        description: 'Sessão ou entrada não encontrada.',
+    })
     async delete(
         @Param('drawSessionId') drawSessionId: string,
         @Param('entryId') entryId: string,

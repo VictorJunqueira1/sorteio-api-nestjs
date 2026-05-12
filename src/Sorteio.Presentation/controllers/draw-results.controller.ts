@@ -1,6 +1,8 @@
 import { Controller, Get, Param, Post, Body } from '@nestjs/common';
+import { ExecuteSimpleDrawRequest } from '../../Sorteio.Communication/requests/draw-results/execute-simple-draw.request';
 import {
     ApiBadRequestResponse,
+    ApiBody,
     ApiCreatedResponse,
     ApiNotFoundResponse,
     ApiOkResponse,
@@ -27,12 +29,16 @@ export class DrawResultsController {
     @ApiOperation({
         summary: 'Executar sorteio simples',
         description:
-            'Sorteia uma entrada da sessão, registra o resultado no histórico e marca a entrada como vencedora quando a sessão não permite repetição.',
+            'Sorteia uma entrada da sessão, registra o resultado no histórico e permite definir opcionalmente se itens já sorteados podem repetir nesta execução.',
     })
     @ApiParam({
         name: 'drawSessionId',
         description: 'ID da sessão de sorteio.',
         example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiBody({
+        type: ExecuteSimpleDrawRequest,
+        required: false,
     })
     @ApiCreatedResponse({
         description: 'Sorteio executado com sucesso.',
@@ -47,20 +53,24 @@ export class DrawResultsController {
     })
     async executeSimpleDraw(
         @Param('drawSessionId') drawSessionId: string,
+        @Body() request: ExecuteSimpleDrawRequest,
     ): Promise<DrawResultResponse> {
-        return await this.executeSimpleDrawUseCase.execute(drawSessionId);
+        return await this.executeSimpleDrawUseCase.execute(drawSessionId, request);
     }
 
     @Post('draw/number')
     @ApiOperation({
         summary: 'Executar sorteio numérico',
         description:
-            'Sorteia um número dentro do intervalo informado. Quando a sessão não permite repetição, números já sorteados ficam indisponíveis.',
+            'Sorteia um número dentro do intervalo informado. Permite definir opcionalmente se números já sorteados podem repetir nesta execução.',
     })
     @ApiParam({
         name: 'drawSessionId',
         description: 'ID da sessão de sorteio.',
         example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiBody({
+        type: ExecuteNumberDrawRequest,
     })
     @ApiCreatedResponse({
         description: 'Sorteio numérico executado com sucesso.',

@@ -14,6 +14,7 @@ import { DRAW_SESSIONS_REPOSITORY } from '../../../Sorteio.Domain/repositories/d
 import type { DrawSessionsRepository } from '../../../Sorteio.Domain/repositories/draw-sessions/draw-sessions.repository';
 import { DRAW_SESSION_REALTIME_NOTIFIER } from '../../../Sorteio.Domain/services/realtime/draw-session-realtime-notifier.service';
 import type { DrawSessionRealtimeNotifier } from '../../../Sorteio.Domain/services/realtime/draw-session-realtime-notifier.service';
+import { ExecuteSimpleDrawRequest } from '../../../Sorteio.Communication/requests/draw-results/execute-simple-draw.request';
 
 import { DrawResultMapper } from './draw-result.mapper';
 
@@ -33,7 +34,10 @@ export class ExecuteSimpleDrawUseCase {
         private readonly realtimeNotifier: DrawSessionRealtimeNotifier
     ) { }
 
-    async execute(drawSessionId: string): Promise<DrawResultResponse> {
+    async execute(
+        drawSessionId: string,
+        request?: ExecuteSimpleDrawRequest,
+    ): Promise<DrawResultResponse> {
         const drawSession = await this.drawSessionsRepository.findById(drawSessionId);
 
         if (!drawSession) {
@@ -50,7 +54,10 @@ export class ExecuteSimpleDrawUseCase {
             throw new BusinessException('A sessão não possui entradas para sorteio.');
         }
 
-        const availableEntries = drawSession.allowRepeatedWinners
+        const allowRepeatedWinners =
+            request?.allowRepeatedWinners ?? drawSession.allowRepeatedWinners;
+
+        const availableEntries = allowRepeatedWinners
             ? entries
             : entries.filter((entry) => !entry.isWinner);
 

@@ -63,7 +63,10 @@ export class ExecuteNumberDrawUseCase {
 
         this.validateRange(request.min, request.max);
 
-        const selectedNumber = drawSession.allowRepeatedWinners
+        const allowRepeatedWinners =
+            request.allowRepeatedWinners ?? drawSession.allowRepeatedWinners;
+
+        const selectedNumber = allowRepeatedWinners
             ? this.drawRandomNumber(request.min, request.max)
             : await this.drawAvailableNumber(drawSessionId, request.min, request.max);
 

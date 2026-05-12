@@ -38,6 +38,35 @@ export class DrawSessionModel {
     })
     allowRepeatedWinners!: boolean;
 
+    @Column({
+        name: 'is_public',
+        type: 'bit',
+        default: false,
+    })
+    isPublic!: boolean;
+
+    @Column({
+        name: 'public_code',
+        type: 'varchar',
+        length: 64,
+        nullable: true,
+    })
+    publicCode?: string | null;
+
+    @Column({
+        name: 'require_participant_name',
+        type: 'bit',
+        default: true,
+    })
+    requireParticipantName!: boolean;
+
+    @Column({
+        name: 'allow_duplicate_public_entries',
+        type: 'bit',
+        default: false,
+    })
+    allowDuplicatePublicEntries!: boolean;
+
     @CreateDateColumn({ name: 'created_at', type: 'datetime2' })
     createdAt!: Date;
 

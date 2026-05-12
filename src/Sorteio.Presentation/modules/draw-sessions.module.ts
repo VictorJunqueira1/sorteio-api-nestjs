@@ -30,13 +30,17 @@ import { ImportManualDrawEntriesUseCase } from 'src/Sorteio.Application/use-case
 import { DrawEntriesImportParserService } from '../../Sorteio.Application/services/draw-entries/draw-entries-import-parser.service';
 import { PreviewImportDrawEntriesUseCase } from '../../Sorteio.Application/use-cases/draw-entries/preview-import-draw-entries.use-case';
 import { RestartDrawSessionUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/restart-draw-session.use-case';
+import { PublicDrawSessionsController } from '../controllers/public-draw-sessions.controller';
+import { EnablePublicDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/draw-sessions/enable-public-draw-session.use-case';
+import { GetPublicDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/public-draw-sessions/get-public-draw-session.use-case';
+import { JoinPublicDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/public-draw-sessions/join-public-draw-session.use-case';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([DrawSessionModel, DrawEntryModel, DrawResultModel]),
+        TypeOrmModule.forFeature([DrawSessionModel, DrawEntryModel, DrawResultModel, PublicDrawSessionsController]),
         ParticipantsModule,
     ],
-    controllers: [DrawSessionsController, DrawEntriesController, DrawResultsController],
+    controllers: [DrawSessionsController, DrawEntriesController, DrawResultsController, PublicDrawSessionsController],
     providers: [
         CreateDrawSessionUseCase,
         ListDrawSessionsUseCase,
@@ -54,6 +58,10 @@ import { RestartDrawSessionUseCase } from '../../Sorteio.Application/use-cases/d
         ExecuteSimpleDrawUseCase,
         ExecuteNumberDrawUseCase,
         ListDrawResultsBySessionUseCase,
+
+        EnablePublicDrawSessionUseCase,
+        GetPublicDrawSessionUseCase,
+        JoinPublicDrawSessionUseCase,
 
         FinishDrawSessionUseCase,
 

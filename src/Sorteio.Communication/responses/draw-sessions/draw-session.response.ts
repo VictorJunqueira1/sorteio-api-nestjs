@@ -22,6 +22,18 @@ export class DrawSessionResponse {
     allowRepeatedWinners!: boolean;
 
     @ApiProperty()
+    isPublic!: boolean;
+
+    @ApiPropertyOptional()
+    publicCode?: string | null;
+
+    @ApiProperty()
+    requireParticipantName!: boolean;
+
+    @ApiProperty()
+    allowDuplicatePublicEntries!: boolean;
+
+    @ApiProperty()
     createdAt!: Date;
 
     @ApiPropertyOptional()

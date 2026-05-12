@@ -67,6 +67,17 @@ export class TypeOrmDrawSessionsRepository implements DrawSessionsRepository {
         await this.repository.softDelete(id);
     }
 
+    async findByPublicCode(publicCode: string): Promise<DrawSession | null> {
+        const drawSession = await this.repository.findOne({
+            where: {
+                publicCode,
+                isPublic: true,
+            },
+        });
+
+        return drawSession ? this.toDomain(drawSession) : null;
+    }
+
     private toModel(drawSession: DrawSession): Partial<DrawSessionModel> {
         return {
             id: drawSession.id,
@@ -75,6 +86,10 @@ export class TypeOrmDrawSessionsRepository implements DrawSessionsRepository {
             type: drawSession.type,
             status: drawSession.status,
             allowRepeatedWinners: drawSession.allowRepeatedWinners,
+            isPublic: drawSession.isPublic,
+            publicCode: drawSession.publicCode ?? null,
+            requireParticipantName: drawSession.requireParticipantName,
+            allowDuplicatePublicEntries: drawSession.allowDuplicatePublicEntries,
             createdAt: drawSession.createdAt,
             updatedAt: drawSession.updatedAt ?? null,
             finishedAt: drawSession.finishedAt ?? null,
@@ -89,6 +104,10 @@ export class TypeOrmDrawSessionsRepository implements DrawSessionsRepository {
             type: model.type,
             status: model.status,
             allowRepeatedWinners: model.allowRepeatedWinners,
+            isPublic: model.isPublic,
+            publicCode: model.publicCode ?? null,
+            requireParticipantName: model.requireParticipantName,
+            allowDuplicatePublicEntries: model.allowDuplicatePublicEntries,
             createdAt: model.createdAt,
             updatedAt: model.updatedAt ?? null,
             finishedAt: model.finishedAt ?? null,

@@ -30,6 +30,11 @@ export interface CreateNumericDrawEntryProps {
     displayName: string;
 }
 
+export interface CreateQrCodeDrawEntryProps {
+    drawSessionId: string;
+    displayName: string;
+}
+
 export class DrawEntry {
     private constructor(private readonly props: DrawEntryProps) { }
 
@@ -78,6 +83,19 @@ export class DrawEntry {
 
     static restore(props: DrawEntryProps): DrawEntry {
         return new DrawEntry(props);
+    }
+
+    static createQrCode(props: CreateQrCodeDrawEntryProps): DrawEntry {
+        return new DrawEntry({
+            id: randomUUID(),
+            drawSessionId: props.drawSessionId,
+            participantId: null,
+            displayName: DrawEntry.normalizeRequiredText(props.displayName),
+            imageUrl: null,
+            source: DrawEntrySource.QrCode,
+            isWinner: false,
+            createdAt: new Date(),
+        });
     }
 
     get id(): string {

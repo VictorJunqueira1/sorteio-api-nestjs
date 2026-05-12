@@ -19,8 +19,12 @@ import {
     ApiOperation,
     ApiParam,
     ApiTags,
+    ApiBody
 } from '@nestjs/swagger';
 
+import { EnablePublicDrawSessionUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/enable-public-draw-session.use-case';
+import { EnablePublicDrawSessionRequest } from '../../Sorteio.Communication/requests/draw-sessions/enable-public-draw-session.request';
+import { PublicDrawSessionCodeResponse } from '../../Sorteio.Communication/responses/draw-sessions/public-draw-session-code.response';
 import { CreateDrawSessionUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/create-draw-session.use-case';
 import { DeleteDrawSessionUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/delete-draw-session.use-case';
 import { FinishDrawSessionUseCase } from '../../Sorteio.Application/use-cases/draw-sessions/finish-draw-session.use-case';
@@ -40,7 +44,8 @@ export class DrawSessionsController {
         private readonly getDrawSessionByIdUseCase: GetDrawSessionByIdUseCase,
         private readonly deleteDrawSessionUseCase: DeleteDrawSessionUseCase,
         private readonly finishDrawSessionUseCase: FinishDrawSessionUseCase,
-        private readonly restartDrawSessionUseCase: RestartDrawSessionUseCase
+        private readonly restartDrawSessionUseCase: RestartDrawSessionUseCase,
+        private readonly enablePublicDrawSessionUseCase: EnablePublicDrawSessionUseCase,
     ) { }
 
     @Post()
@@ -143,11 +148,34 @@ export class DrawSessionsController {
     @ApiBadRequestResponse({
         description: 'Sessão cancelada ou regra de negócio inválida.',
     })
-    @ApiNotFoundResponse({
-        description: 'Sessão de sorteio não encontrada.',
-    })
+    @ApiNotFoundResponse({description: 'Sessão de sorteio não encontrada.'})
     async restart(@Param('id') id: string): Promise<DrawSessionResponse> {
         return await this.restartDrawSessionUseCase.execute(id);
+    }
+
+    @Post(':id/public-code')
+    @ApiOperation({
+        summary: 'Gerar código público da sessão',
+        description:
+            'Habilita o acesso público da sessão e gera um código único que poderá ser usado para montar um QR Code no frontend.',
+    })
+    @ApiParam({
+        name: 'id',
+        description: 'ID da sessão de sorteio.',
+        example: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+    })
+    @ApiBody({ type: EnablePublicDrawSessionRequest })
+    @ApiCreatedResponse({
+        description: 'Código público gerado com sucesso.',
+        type: PublicDrawSessionCodeResponse,
+    })
+    @ApiBadRequestResponse({description: 'Sessão finalizada, cancelada ou dados inválidos.'})
+    @ApiNotFoundResponse({description: 'Sessão de sorteio não encontrada.'})
+    async enablePublicAccess(
+        @Param('id') id: string,
+        @Body() request: EnablePublicDrawSessionRequest,
+    ): Promise<PublicDrawSessionCodeResponse> {
+        return await this.enablePublicDrawSessionUseCase.execute(id, request);
     }
 
     @Delete(':id')

@@ -12,6 +12,7 @@ export interface DrawSessionsRepository {
     create(drawSession: DrawSession): Promise<DrawSession>;
     update(drawSession: DrawSession): Promise<DrawSession>;
     findById(id: string): Promise<DrawSession | null>;
+    findByPublicCode(publicCode: string): Promise<DrawSession | null>;
     findAll(filters: ListDrawSessionsFilters): Promise<DrawSession[]>;
     delete(id: string): Promise<void>;
 }

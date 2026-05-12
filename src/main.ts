@@ -6,7 +6,14 @@ import { GlobalExceptionFilter } from './Sorteio.Presentation/filters/global-exc
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
+
   app.enableShutdownHooks();
+
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.useGlobalPipes(

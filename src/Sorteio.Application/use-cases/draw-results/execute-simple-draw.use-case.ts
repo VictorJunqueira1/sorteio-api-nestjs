@@ -12,6 +12,8 @@ import { DRAW_RESULTS_REPOSITORY } from '../../../Sorteio.Domain/repositories/dr
 import type { DrawResultsRepository } from '../../../Sorteio.Domain/repositories/draw-results/draw-results.repository';
 import { DRAW_SESSIONS_REPOSITORY } from '../../../Sorteio.Domain/repositories/draw-sessions/draw-sessions.repository';
 import type { DrawSessionsRepository } from '../../../Sorteio.Domain/repositories/draw-sessions/draw-sessions.repository';
+import { DRAW_SESSION_REALTIME_NOTIFIER } from '../../../Sorteio.Domain/services/realtime/draw-session-realtime-notifier.service';
+import type { DrawSessionRealtimeNotifier } from '../../../Sorteio.Domain/services/realtime/draw-session-realtime-notifier.service';
 
 import { DrawResultMapper } from './draw-result.mapper';
 
@@ -26,6 +28,9 @@ export class ExecuteSimpleDrawUseCase {
 
         @Inject(DRAW_RESULTS_REPOSITORY)
         private readonly drawResultsRepository: DrawResultsRepository,
+
+        @Inject(DRAW_SESSION_REALTIME_NOTIFIER)
+        private readonly realtimeNotifier: DrawSessionRealtimeNotifier
     ) { }
 
     async execute(drawSessionId: string): Promise<DrawResultResponse> {
@@ -65,11 +70,18 @@ export class ExecuteSimpleDrawUseCase {
             imageUrl: selectedEntry.imageUrl,
         });
 
-        const createdDrawResult =
-            await this.drawResultsRepository.create(drawResult);
+        const createdDrawResult = await this.drawResultsRepository.create(drawResult);
 
         selectedEntry.markAsWinner();
         await this.drawEntriesRepository.update(selectedEntry);
+
+        await this.realtimeNotifier.notifyDrawResultCreated({
+            drawSessionId: createdDrawResult.drawSessionId,
+            drawEntryId: createdDrawResult.drawEntryId,
+            displayName: createdDrawResult.displayName,
+            imageUrl: createdDrawResult.imageUrl ?? null,
+            drawnAt: createdDrawResult.drawnAt,
+        });
 
         return DrawResultMapper.toResponse(createdDrawResult);
     }

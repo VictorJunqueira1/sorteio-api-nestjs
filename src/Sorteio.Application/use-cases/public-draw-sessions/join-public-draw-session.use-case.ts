@@ -11,6 +11,8 @@ import { DRAW_ENTRIES_REPOSITORY } from '../../../Sorteio.Domain/repositories/dr
 import type { DrawEntriesRepository } from '../../../Sorteio.Domain/repositories/draw-entries/draw-entries.repository';
 import { DRAW_SESSIONS_REPOSITORY } from '../../../Sorteio.Domain/repositories/draw-sessions/draw-sessions.repository';
 import type { DrawSessionsRepository } from '../../../Sorteio.Domain/repositories/draw-sessions/draw-sessions.repository';
+import { DRAW_SESSION_REALTIME_NOTIFIER } from '../../../Sorteio.Domain/services/realtime/draw-session-realtime-notifier.service';
+import type { DrawSessionRealtimeNotifier } from '../../../Sorteio.Domain/services/realtime/draw-session-realtime-notifier.service';
 
 @Injectable()
 export class JoinPublicDrawSessionUseCase {
@@ -20,6 +22,9 @@ export class JoinPublicDrawSessionUseCase {
 
         @Inject(DRAW_ENTRIES_REPOSITORY)
         private readonly drawEntriesRepository: DrawEntriesRepository,
+
+        @Inject(DRAW_SESSION_REALTIME_NOTIFIER)
+        private readonly realtimeNotifier: DrawSessionRealtimeNotifier
     ) { }
 
     async execute(
@@ -65,6 +70,24 @@ export class JoinPublicDrawSessionUseCase {
         });
 
         const createdEntry = await this.drawEntriesRepository.create(drawEntry);
+
+        const entries = await this.drawEntriesRepository.findBySessionId(drawSession.id);
+
+        await this.realtimeNotifier.notifyPublicParticipantJoined({
+            drawSessionId: drawSession.id,
+            publicCode,
+            totalParticipants: entries.length,
+            entry: {
+                id: createdEntry.id,
+                drawSessionId: createdEntry.drawSessionId,
+                participantId: createdEntry.participantId ?? null,
+                displayName: createdEntry.displayName,
+                imageUrl: createdEntry.imageUrl ?? null,
+                source: createdEntry.source,
+                isWinner: createdEntry.isWinner,
+                createdAt: createdEntry.createdAt,
+            },
+        });
 
         return {
             entryId: createdEntry.id,

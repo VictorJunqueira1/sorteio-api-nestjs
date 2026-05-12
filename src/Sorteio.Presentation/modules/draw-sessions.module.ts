@@ -34,6 +34,8 @@ import { PublicDrawSessionsController } from '../controllers/public-draw-session
 import { EnablePublicDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/draw-sessions/enable-public-draw-session.use-case';
 import { GetPublicDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/public-draw-sessions/get-public-draw-session.use-case';
 import { JoinPublicDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/public-draw-sessions/join-public-draw-session.use-case';
+import { PublicDrawSessionsGateway } from '../gateways/public-draw-sessions.gateway';
+import { DRAW_SESSION_REALTIME_NOTIFIER } from '../../Sorteio.Domain/services/realtime/draw-session-realtime-notifier.service';
 
 @Module({
     imports: [
@@ -68,6 +70,7 @@ import { JoinPublicDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/
         DrawEntriesImportParserService,
         PreviewImportDrawEntriesUseCase,
 
+        PublicDrawSessionsGateway,
         {
             provide: DRAW_SESSIONS_REPOSITORY,
             useClass: TypeOrmDrawSessionsRepository,
@@ -79,6 +82,10 @@ import { JoinPublicDrawSessionUseCase } from 'src/Sorteio.Application/use-cases/
         {
             provide: DRAW_RESULTS_REPOSITORY,
             useClass: TypeOrmDrawResultsRepository,
+        },
+        {
+            provide: DRAW_SESSION_REALTIME_NOTIFIER,
+            useExisting: PublicDrawSessionsGateway,
         },
     ],
 })

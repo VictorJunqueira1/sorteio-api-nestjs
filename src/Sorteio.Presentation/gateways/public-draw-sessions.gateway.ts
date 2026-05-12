@@ -132,31 +132,54 @@ export class PublicDrawSessionsGateway
         input: NotifyDrawResultCreatedInput,
     ): Promise<void> {
         const payload = {
-            drawSessionId: input.drawSessionId,
-            drawEntryId: input.drawEntryId,
+            drawSessionId: this.normalizeRoomKey(input.drawSessionId),
+            drawEntryId: this.normalizeRoomKey(input.drawEntryId),
             displayName: input.displayName,
             imageUrl: input.imageUrl ?? null,
             drawnAt: input.drawnAt,
         };
 
+        const drawSessionRoom = this.getDrawSessionRoom(input.drawSessionId);
+        const entryRoom = this.getEntryRoom(input.drawEntryId);
+        const publicSessionRoom = input.publicCode
+            ? this.getPublicSessionRoom(input.publicCode)
+            : null;
+
+        console.log('[SOCKET] Emitindo resultado do sorteio', {
+            drawSessionRoom,
+            entryRoom,
+            publicSessionRoom,
+            payload,
+        });
+
         this.server
-            .to(this.getDrawSessionRoom(input.drawSessionId))
+            .to(drawSessionRoom)
             .emit('draw-session.result-created', payload);
 
         this.server
-            .to(this.getEntryRoom(input.drawEntryId))
+            .to(entryRoom)
             .emit('public-entry.drawn', payload);
+
+        if (publicSessionRoom) {
+            this.server
+                .to(publicSessionRoom)
+                .emit('public-entry.drawn', payload);
+        }
+    }
+
+    private normalizeRoomKey(value: string): string {
+        return value.trim().toLowerCase();
     }
 
     private getDrawSessionRoom(drawSessionId: string): string {
-        return `draw-session:${drawSessionId}`;
+        return `draw-session:${this.normalizeRoomKey(drawSessionId)}`;
     }
 
     private getPublicSessionRoom(publicCode: string): string {
-        return `public-session:${publicCode}`;
+        return `public-session:${this.normalizeRoomKey(publicCode)}`;
     }
 
     private getEntryRoom(entryId: string): string {
-        return `entry:${entryId}`;
+        return `entry:${this.normalizeRoomKey(entryId)}`;
     }
 }

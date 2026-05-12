@@ -26,6 +26,7 @@ export interface NotifyDrawResultCreatedInput {
     displayName: string;
     imageUrl?: string | null;
     drawnAt: Date;
+    publicCode?: string | null;
 }
 
 export interface DrawSessionRealtimeNotifier {

@@ -81,6 +81,7 @@ export class ExecuteSimpleDrawUseCase {
             displayName: createdDrawResult.displayName,
             imageUrl: createdDrawResult.imageUrl ?? null,
             drawnAt: createdDrawResult.drawnAt,
+            publicCode: drawSession.publicCode ?? null,
         });
 
         return DrawResultMapper.toResponse(createdDrawResult);

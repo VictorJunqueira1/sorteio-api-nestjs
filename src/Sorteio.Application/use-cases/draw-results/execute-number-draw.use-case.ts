@@ -7,6 +7,7 @@ import { DrawEntry } from '../../../Sorteio.Domain/entities/draw-entry.entity';
 import { DrawResult } from '../../../Sorteio.Domain/entities/draw-result.entity';
 import { DrawEntrySource } from '../../../Sorteio.Domain/enums/draw-entry-source.enum';
 import { DrawSessionStatus } from '../../../Sorteio.Domain/enums/draw-session-status.enum';
+import { DrawSessionType } from '../../../Sorteio.Domain/enums/draw-session-type.enum';
 import { BusinessException } from '../../../Sorteio.Domain/exceptions/business.exception';
 import { NotFoundException } from '../../../Sorteio.Domain/exceptions/not-found.exception';
 import { DRAW_ENTRIES_REPOSITORY } from '../../../Sorteio.Domain/repositories/draw-entries/draw-entries.repository';
@@ -35,7 +36,7 @@ export class ExecuteNumberDrawUseCase {
         private readonly drawResultsRepository: DrawResultsRepository,
 
         @Inject(DRAW_SESSION_REALTIME_NOTIFIER)
-        private readonly realtimeNotifier: DrawSessionRealtimeNotifier
+        private readonly realtimeNotifier: DrawSessionRealtimeNotifier,
     ) { }
 
     async execute(
@@ -52,48 +53,39 @@ export class ExecuteNumberDrawUseCase {
             throw new BusinessException('Não é possível sortear em uma sessão finalizada.');
         }
 
-        if (request.min > request.max) {
-            throw new BusinessException('O número inicial não pode ser maior que o número final.');
+        if (drawSession.status === DrawSessionStatus.Canceled) {
+            throw new BusinessException('Não é possível sortear em uma sessão cancelada.');
         }
 
-        const rangeSize = request.max - request.min + 1;
-
-        if (rangeSize > this.maxRangeSize) {
-            throw new BusinessException(
-                `O intervalo do sorteio numérico não pode ultrapassar ${this.maxRangeSize} números.`,
-            );
+        if (drawSession.type !== DrawSessionType.Numeric) {
+            throw new BusinessException('Esta sessão não é do tipo numérico.');
         }
 
-        const numericEntries = await this.getOrCreateNumericEntries(
-            drawSessionId,
-            request.min,
-            request.max,
-        );
+        this.validateRange(request.min, request.max);
 
-        const availableEntries = drawSession.allowRepeatedWinners
-            ? numericEntries
-            : numericEntries.filter((entry) => !entry.isWinner);
+        const selectedNumber = drawSession.allowRepeatedWinners
+            ? this.drawRandomNumber(request.min, request.max)
+            : await this.drawAvailableNumber(drawSessionId, request.min, request.max);
 
-        if (availableEntries.length === 0) {
-            throw new BusinessException(
-                'Não há mais números disponíveis para sorteio nesta sessão.',
-            );
-        }
+        const displayName = String(selectedNumber);
 
-        const selectedIndex = randomInt(availableEntries.length);
-        const selectedEntry = availableEntries[selectedIndex];
+        const drawEntry = DrawEntry.createNumeric({
+            drawSessionId: drawSession.id,
+            displayName,
+        });
+
+        drawEntry.markAsWinner();
+
+        const createdEntry = await this.drawEntriesRepository.create(drawEntry);
 
         const drawResult = DrawResult.create({
             drawSessionId: drawSession.id,
-            drawEntryId: selectedEntry.id,
-            displayName: selectedEntry.displayName,
+            drawEntryId: createdEntry.id,
+            displayName: createdEntry.displayName,
             imageUrl: null,
         });
 
         const createdDrawResult = await this.drawResultsRepository.create(drawResult);
-
-        selectedEntry.markAsWinner();
-        await this.drawEntriesRepository.update(selectedEntry);
 
         await this.realtimeNotifier.notifyDrawResultCreated({
             drawSessionId: createdDrawResult.drawSessionId,
@@ -106,48 +98,64 @@ export class ExecuteNumberDrawUseCase {
         return DrawResultMapper.toResponse(createdDrawResult);
     }
 
-    private async getOrCreateNumericEntries(
+    private validateRange(min: number, max: number): void {
+        if (!Number.isInteger(min) || !Number.isInteger(max)) {
+            throw new BusinessException('Os valores mínimo e máximo devem ser números inteiros.');
+        }
+
+        if (min < 0 || max < 0) {
+            throw new BusinessException('Os valores mínimo e máximo não podem ser negativos.');
+        }
+
+        if (min > max) {
+            throw new BusinessException('O número inicial não pode ser maior que o número final.');
+        }
+
+        const rangeSize = max - min + 1;
+
+        if (rangeSize > this.maxRangeSize) {
+            throw new BusinessException(
+                `O intervalo do sorteio numérico não pode ultrapassar ${this.maxRangeSize} números.`,
+            );
+        }
+    }
+
+    private drawRandomNumber(min: number, max: number): number {
+        return randomInt(min, max + 1);
+    }
+
+    private async drawAvailableNumber(
         drawSessionId: string,
         min: number,
         max: number,
-    ): Promise<DrawEntry[]> {
-        const existingEntries =
-            await this.drawEntriesRepository.findBySessionId(drawSessionId);
+    ): Promise<number> {
+        const existingEntries = await this.drawEntriesRepository.findBySessionId(drawSessionId);
 
-        const existingNumericEntries = existingEntries.filter((entry) => {
-            if (entry.source !== DrawEntrySource.Numeric) {
-                return false;
-            }
-
-            const numericValue = Number(entry.displayName);
-
-            return Number.isInteger(numericValue) && numericValue >= min && numericValue <= max;
-        });
-
-        const existingNumberKeys = new Set(
-            existingNumericEntries.map((entry) => entry.displayName),
+        const alreadyDrawnNumbers = new Set(
+            existingEntries
+                .filter((entry) => entry.source === DrawEntrySource.Numeric)
+                .filter((entry) => entry.isWinner)
+                .map((entry) => Number(entry.displayName))
+                .filter((value) => Number.isInteger(value))
+                .filter((value) => value >= min && value <= max),
         );
 
-        const entriesToCreate: DrawEntry[] = [];
+        const availableNumbers: number[] = [];
 
         for (let number = min; number <= max; number++) {
-            const displayName = String(number);
-
-            if (existingNumberKeys.has(displayName)) {
-                continue;
+            if (!alreadyDrawnNumbers.has(number)) {
+                availableNumbers.push(number);
             }
+        }
 
-            entriesToCreate.push(
-                DrawEntry.createNumeric({
-                    drawSessionId,
-                    displayName,
-                }),
+        if (availableNumbers.length === 0) {
+            throw new BusinessException(
+                'Não há mais números disponíveis para sorteio nesta sessão.',
             );
         }
 
-        const createdEntries =
-            await this.drawEntriesRepository.createMany(entriesToCreate);
+        const selectedIndex = randomInt(availableNumbers.length);
 
-        return [...existingNumericEntries, ...createdEntries];
+        return availableNumbers[selectedIndex];
     }
 }
